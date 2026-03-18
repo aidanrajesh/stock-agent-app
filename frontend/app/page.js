@@ -10,7 +10,7 @@ export default function Home() {
   const [watchlist, setWatchlist] = useState([]);
   const [watchlistLoading, setWatchlistLoading] = useState(true);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const baseUrl = "/api";
 
   const analyzeTicker = async () => {
     if (!ticker.trim()) return;
@@ -32,18 +32,21 @@ export default function Home() {
   };
 
   const loadWatchlist = useCallback(async () => {
-    setWatchlistLoading(true);
+  setWatchlistLoading(true);
 
-    try {
-      const response = await fetch(`${baseUrl}/watchlist`);
-      const data = await response.json();
-      setWatchlist(data);
-    } catch {
-      setWatchlist([{ error: "Could not load watchlist." }]);
-    } finally {
-      setWatchlistLoading(false);
-    }
-  }, [baseUrl]);
+  try {
+    const response = await fetch(`${baseUrl}/watchlist`);
+    const data = await response.json();
+
+    console.log("watchlist api response:", data);
+
+    setWatchlist(Array.isArray(data) ? data : data.watchlist || []);
+  } catch {
+    setWatchlist([{ error: "Could not load watchlist." }]);
+  } finally {
+    setWatchlistLoading(false);
+  }
+}, [baseUrl]);
 
   useEffect(() => {
     const run = async () => {
@@ -118,7 +121,7 @@ export default function Home() {
           )}
 
           <div className="space-y-4">
-            {watchlist.map((stock, index) => (
+            {(Array.isArray(watchlist) ? watchlist : []).map((stock, index) => (
               <div key={index} className="border rounded p-4 bg-gray-50">
                 {stock.error ? (
                   <>
