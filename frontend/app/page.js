@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function Home() {
   const [ticker, setTicker] = useState("");
@@ -12,40 +12,46 @@ export default function Home() {
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-  async function analyzeTicker() {
+  const analyzeTicker = async () => {
     if (!ticker.trim()) return;
 
     setLoading(true);
     setResult(null);
 
     try {
-      const response = await fetch(`${baseUrl}/analyze/${ticker.trim().toUpperCase()}`);
+      const response = await fetch(
+        `${baseUrl}/analyze/${ticker.trim().toUpperCase()}`
+      );
       const data = await response.json();
       setResult(data);
-    } catch (error) {
+    } catch {
       setResult({ error: "Could not connect to backend." });
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setLoading(false);
-  }
-
-  async function loadWatchlist() {
+  const loadWatchlist = useCallback(async () => {
     setWatchlistLoading(true);
 
     try {
       const response = await fetch(`${baseUrl}/watchlist`);
       const data = await response.json();
       setWatchlist(data);
-    } catch (error) {
+    } catch {
       setWatchlist([{ error: "Could not load watchlist." }]);
+    } finally {
+      setWatchlistLoading(false);
     }
-
-    setWatchlistLoading(false);
-  }
+  }, [baseUrl]);
 
   useEffect(() => {
-    loadWatchlist();
-  }, []);
+    const run = async () => {
+      await loadWatchlist();
+    };
+
+    run();
+  }, [loadWatchlist]);
 
   return (
     <main className="min-h-screen bg-white text-black px-6 py-10">
@@ -116,7 +122,9 @@ export default function Home() {
               <div key={index} className="border rounded p-4 bg-gray-50">
                 {stock.error ? (
                   <>
-                    <h3 className="text-lg font-semibold">{stock.ticker || "Unknown"}</h3>
+                    <h3 className="text-lg font-semibold">
+                      {stock.ticker || "Unknown"}
+                    </h3>
                     <p>{stock.error}</p>
                   </>
                 ) : (
