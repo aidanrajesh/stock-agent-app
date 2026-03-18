@@ -1,21 +1,21 @@
-import { NextResponse } from "next/server";
+import { analyzeStock, fetchDailySeries } from "../../_lib/stockAnalysis";
 
 export async function GET(request, { params }) {
   try {
-    const backendUrl = process.env.BACKEND_API_URL;
-    const ticker = params.ticker;
+    const ticker = params.ticker.toUpperCase();
+    const closes = await fetchDailySeries(ticker);
+    const analysis = analyzeStock(closes);
 
-    const response = await fetch(`${backendUrl}/analyze/${ticker}`, {
-      cache: "no-store",
+    return Response.json({
+      ticker,
+      ...analysis,
     });
+  } catch (error) {
+    console.error("Analyze route error:", error);
 
-    const data = await response.json();
-
-    return NextResponse.json(data, { status: response.status });
-  } catch {
-    return NextResponse.json(
-      { error: "Could not connect to backend." },
-      { status: 500 }
+    return Response.json(
+      { error: error?.message || "Server error." },
+      { status: 400 }
     );
   }
 }

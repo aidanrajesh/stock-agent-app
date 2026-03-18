@@ -1,18 +1,29 @@
-import { NextResponse } from "next/server";
+import { analyzeStock, fetchDailySeries } from "../_lib/stockAnalysis";
+
+const tickers = ["AAPL"];
 
 export async function GET() {
   try {
-    const backendUrl = process.env.BACKEND_API_URL;
+    const results = [];
 
-    const response = await fetch(`${backendUrl}/watchlist`, {
-      cache: "no-store",
-    });
+    for (const ticker of tickers) {
+      try {
+        const closes = await fetchDailySeries(ticker);
+        const analysis = analyzeStock(closes);
+        results.push({ ticker, ...analysis });
+      } catch (error) {
+        results.push({
+          ticker,
+          error: error?.message || "No data returned for this ticker.",
+        });
+      }
+    }
 
-    const data = await response.json();
+    return Response.json(results);
+  } catch (error) {
+    console.error("Watchlist route error:", error);
 
-    return NextResponse.json(data, { status: response.status });
-  } catch {
-    return NextResponse.json(
+    return Response.json(
       { error: "Could not load watchlist." },
       { status: 500 }
     );
