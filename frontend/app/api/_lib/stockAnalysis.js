@@ -88,16 +88,13 @@ export function analyzeStock(closes) {
   };
 }
 
+
 export async function fetchDailySeries(ticker) {
   const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
 
   if (!apiKey) {
-  return Promise.reject(
-    new Error(
-      `Missing ALPHA_VANTAGE_API_KEY. hasKey=${!!process.env.ALPHA_VANTAGE_API_KEY}`
-    )
-  );
-}
+    throw new Error("Missing ALPHA_VANTAGE_API_KEY");
+  }
 
   const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(
     ticker
@@ -109,16 +106,17 @@ export async function fetchDailySeries(ticker) {
   });
 
   const data = await response.json();
+  console.log(`Alpha Vantage response for ${ticker}:`, data);
+
   const series = data["Time Series (Daily)"];
 
   if (!series) {
-    const errorMessage =
+    throw new Error(
       data?.Note ||
       data?.Information ||
       data?.["Error Message"] ||
-      "Could not load stock data. Check ticker or API limit.";
-
-    throw new Error(errorMessage);
+      `No Time Series (Daily) returned for ${ticker}`
+    );
   }
 
   const closes = Object.values(series).map((day) =>
@@ -126,7 +124,7 @@ export async function fetchDailySeries(ticker) {
   );
 
   if (closes.length < 50) {
-    throw new Error("Not enough data returned for analysis.");
+    throw new Error(`Not enough data returned for ${ticker}`);
   }
 
   return closes;

@@ -1,31 +1,23 @@
-import { analyzeStock, fetchDailySeries } from "../_lib/stockAnalysis";
+import * as stockAnalysis from "../_lib/stockAnalysis";
 
-const tickers = ["AAPL"];
+const tickers = ["AAPL", "MSFT", "NVDA", "TSLA", "AMZN"];
 
 export async function GET() {
-  try {
-    const results = [];
+  const results = [];
 
-    for (const ticker of tickers) {
-      try {
-        const closes = await fetchDailySeries(ticker);
-        const analysis = analyzeStock(closes);
-        results.push({ ticker, ...analysis });
-      } catch (error) {
-        results.push({
-          ticker,
-          error: error?.message || "No data returned for this ticker.",
-        });
-      }
+  for (const ticker of tickers) {
+    try {
+      const closes = await stockAnalysis.fetchDailySeries(ticker);
+      const analysis = stockAnalysis.analyzeStock(closes);
+      results.push({ ticker, ...analysis });
+    } catch (error) {
+      console.error(`Watchlist failed for ${ticker}:`, error);
+      results.push({
+        ticker,
+        error: error?.message || "Unknown error",
+      });
     }
-
-    return Response.json(results);
-  } catch (error) {
-    console.error("Watchlist route error:", error);
-
-    return Response.json(
-      { error: "Could not load watchlist." },
-      { status: 500 }
-    );
   }
+
+  return Response.json(results);
 }
