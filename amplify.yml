@@ -11,8 +11,8 @@ applications:
         build:
           commands:
             - cd ..
-            - env | grep -e ALPHA_VANTAGE_API_KEY >> frontend/.env.production
-            - env | grep -e NEXT_PUBLIC_ >> frontend/.env.production
+            - env | grep -e ALPHA_VANTAGE_API_KEY > frontend/.env.production
+            - env | grep -e NEXT_PUBLIC_ >> frontend/.env.production || true
             - cd frontend
             - npm run build
       artifacts:
