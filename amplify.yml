@@ -1,0 +1,25 @@
+version: 1
+applications:
+  - appRoot: frontend
+    frontend:
+      buildPath: /
+      phases:
+        preBuild:
+          commands:
+            - cd frontend
+            - npm ci
+        build:
+          commands:
+            - cd ..
+            - env | grep -e ALPHA_VANTAGE_API_KEY >> frontend/.env.production
+            - env | grep -e NEXT_PUBLIC_ >> frontend/.env.production
+            - cd frontend
+            - npm run build
+      artifacts:
+        baseDirectory: frontend/.next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - frontend/node_modules/**/*
+          - frontend/.next/cache/**/*
