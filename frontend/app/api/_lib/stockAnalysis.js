@@ -92,8 +92,12 @@ export async function fetchDailySeries(ticker) {
   const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
 
   if (!apiKey) {
-    throw new Error("Missing ALPHA_VANTAGE_API_KEY");
-  }
+  return Promise.reject(
+    new Error(
+      `Missing ALPHA_VANTAGE_API_KEY. hasKey=${!!process.env.ALPHA_VANTAGE_API_KEY}`
+    )
+  );
+}
 
   const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(
     ticker
